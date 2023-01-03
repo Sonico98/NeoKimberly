@@ -1,0 +1,8 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyc
+
+# Pyrogram session cache
+*.session
+*.session-journal
