@@ -1,3 +1,3 @@
-- Todo el funcionamiento del bot tiene que ser asíncrono para que se bloquee lo menos posible (en Python, asyncio). En resumen, esto permite cierto paralelismo con Python.
+- Try to make everything async so it doesn't lock the bot in any way
 
-- Intentar respetar los lineamientos del código. El indentado se hace con el tabulador, no con espacios.
+- Try to respect the coding style. Everything in English, using double quotes and using tabs for indents

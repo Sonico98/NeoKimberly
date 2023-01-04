@@ -6,3 +6,6 @@ __pycache__/
 # Pyrogram session cache
 *.session
 *.session-journal
+
+# Sensitive data
+/kimberly/config/login.py
