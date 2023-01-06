@@ -5,5 +5,5 @@ api_hash = '1a2b3c4d5e6f7g8h9i10j11k12l13m14'
 bot_token = '0123456789:AAAAAAABBBBBBBCCCCCCCCDDDDDDDEEEEEE'
 
 # DB
-host = 'localhost'
-port = 27017
+# https://motor.readthedocs.io/en/stable/examples/authentication.html
+uri = "mongodb://user:pass@localhost:27017"
