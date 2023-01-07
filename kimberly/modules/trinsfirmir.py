@@ -1,25 +1,31 @@
 from pyrogram import filters
 from neokimberly import kimberly
-from pyrogram import Client
 
 def trinsfirmir(message):
-    "poner condicional de respuesta a texto. ver"
-    for i in range(len(message)):
-        if message[i] == "aeouäëöüâêôûàèòù":
-            message[i] = "i"
-        elif message[i] == "AEOUÄËÖÜÂÊÔÛÀÈÒÙ":
-            message[i] = "I"
-        elif message[i] == "áéóú":
-            message[i] = "í"
-        elif message[i] == "ÁÉÓÚ":
-            message[i] = "Í"
-    return message
-
-
-@kimberly.on_message(filters.command(["Trinsfirmir"]))
+    vocalesmin = "aeouäëöüâêôûàèòù"
+    vocalesmax = "AEOUÄËÖÜÂÊÔÛÀÈÒÙ"
+    vocalmintil = "áéóú"
+    vocalmaxtil = "ÁÉÓÚ"
+    if len(message.reply_to_message.text) == "":
+        print(len(message.reply_to_message.text))
+        texto = "Respondele a algo que tenga texto."
+        # @kimberly.send_message(message.chat.id, texto)
+        return texto
+    else:
+        string = (message.reply_to_message.text)
+        for x in range(len(vocalesmin)):
+            string = string.replace(vocalesmin[x],"i")
+        for x in range(len(vocalesmax)):            
+            string = string.replace(vocalesmax[x],"I")
+        for x in range(len(vocalmintil)):            
+            string = string.replace(vocalmintil[x],"í")
+        for x in range(len(vocalmaxtil)):            
+            string = string.replace(vocalmaxtil[x],"Í")
+    return string
+       
+@kimberly.on_message(filters.regex("^/trinsfirmir$"))
 async def reply(client, message):
     answer = trinsfirmir(message)
     await message.reply_text(answer, quote=False)
-    print("Me falta el sticker lmao.")
-
+    
     # (\)
