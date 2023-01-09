@@ -21,6 +21,8 @@ def trinsfirmir(message):
 async def reply(client, message):
     answer = trinsfirmir(message)
     sticker = "CAACAgIAAxkBAAEb0vBjvEJxq6StpCBzN4eeZ0-xaap6IQACQQEAAksODwABJlVW31Lsf6stBA"
-    await message.reply_text(answer, reply_to_message_id=message.reply_to_message.id, quote=True)
-    await message.reply_sticker(sticker, disable_notification=True, quote=False)
-
+    try:
+        await message.reply_text(answer, reply_to_message_id=message.reply_to_message.id, quote=True)
+        await message.reply_sticker(sticker, disable_notification=True, quote=False)
+    except:
+        await message.reply_text(answer, quote=True)
