@@ -4,6 +4,7 @@ from db.mongodb import db
 # Collection
 grps = db.groups
 
+# TODO: get_all_reps - listado de reputaciones
 
 async def get_reps(chat_id, giving_user_id, receiving_user_id):
     # The user giving rep is probably not on the DB yet
@@ -11,10 +12,9 @@ async def get_reps(chat_id, giving_user_id, receiving_user_id):
     while (giving_user_doc == {}):
         giving_user_doc = await find_one_doc(grps, { "$and": [{"group": chat_id}, \
                                  {"users.user_id": giving_user_id}] }, {"users.rep.$":1})
-
         if (giving_user_doc == {}):
-            await insert_doc(grps, { "group": chat_id, "users": \
-                                 [ { "user_id": giving_user_id, "rep": 0} ] })
+            await update_doc(grps, {"group": chat_id}, {"$push": {"users": \
+                                 {"user_id": giving_user_id, "rep": 0}}})
 
 
     receiving_user_doc = await find_one_doc(grps, { "$and": [{"group": chat_id}, \
@@ -37,6 +37,6 @@ async def store_rep(chat_id, user_id, rep_change):
         result = await update_doc(grps, matching_doc, {"$inc": {"users.$.rep": rep_change}})
         # If the user is not yet present in the group's user array, add it
         if (repr(result.modified_count) == "0"):
-            res = await update_doc(grps, {"group": chat_id}, {"$push": {"users": {"user_id": user_id, "rep": rep_change}}})
+            await update_doc(grps, {"group": chat_id}, {"$push": {"users": {"user_id": user_id, "rep": rep_change}}})
     else:
         await insert_doc(grps, { "group": chat_id, "users": [ { "user_id": user_id, "rep": rep_change } ] })

@@ -62,4 +62,6 @@ async def change_rep(client, message):
             return
 
 
-
+# @kimberly.on_message(filters.group & filters.text & filters.command("rep"))
+# async def listado_rep(client, message):
+#     print("TODO")
