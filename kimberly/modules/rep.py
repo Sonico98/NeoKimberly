@@ -1,5 +1,4 @@
-from pyrogram.methods.messages import send_message
-from db.rep import store_rep, get_reps
+from db.rep import store_rep, get_reps, get_all_reps
 from neokimberly import kimberly
 from pyrogram import filters
 import re
@@ -62,6 +61,35 @@ async def change_rep(client, message):
             return
 
 
-# @kimberly.on_message(filters.group & filters.text & filters.command("rep"))
-# async def listado_rep(client, message):
-#     print("TODO")
+@kimberly.on_message(filters.group & filters.text & filters.command("rep"))
+async def rep_list(client, message):
+    chat_id = message.chat.id
+    user_rep_list = await get_all_reps(chat_id)
+    if (user_rep_list == {}):
+        await message.reply_text("Todavía no hay un listado de reputaciones en este grupo.\n"
+                                     "Respondé con + o - al mensaje de alguien")
+        return
+
+    reps = []
+    user_ids = []
+    users = []
+    for index, group in enumerate(user_rep_list):
+        reps.append(group[0])
+        user_ids.append(group[1])
+        # Untested - workaround 200 users limit
+        # (we only get 100 users at a time to possibly avoid FloodWait errors)
+        if (index == 100 or group[1] == user_rep_list[-1][1]):
+            if (len(users) > 0):
+                users.append(await kimberly.get_users(user_ids))
+            else:
+                users = await kimberly.get_users(user_ids)
+            user_ids = []
+
+    # Send the list without links first, then add the links
+    # by editing the message. This way users are not mentioned
+    printed_rep_list = "**Social credit leaderboard**\n\n"
+    reply = await message.reply_text(printed_rep_list)
+    for index, user in enumerate(users):
+        printed_rep_list += f"{reps[index]}  -  [{user.first_name}](tg://user?id={user.id})\n"
+    await reply.edit_text(printed_rep_list)
+

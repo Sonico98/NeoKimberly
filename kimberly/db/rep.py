@@ -4,7 +4,17 @@ from db.mongodb import db
 # Collection
 grps = db.groups
 
-# TODO: get_all_reps - listado de reputaciones
+
+async def get_all_reps(chat_id):
+    user_rep_list = await find_one_doc(grps, {"group": chat_id}, {"_id": 0, "users":1})
+    if (user_rep_list != {}):
+        users_array = user_rep_list["users"]
+        user_rep_list = []
+        for u in users_array:
+            user_rep_list.append([u["rep"], u["user_id"]])
+
+    return sorted(user_rep_list, reverse=True)
+
 
 async def get_reps(chat_id, giving_user_id, receiving_user_id):
     # The user giving rep is probably not on the DB yet
