@@ -1,4 +1,4 @@
-from db.rep import store_rep, get_reps, get_all_reps
+from db.reputation import store_rep, get_reps, get_all_reps
 from neokimberly import kimberly
 from pyrogram import filters
 import re
