@@ -93,9 +93,9 @@ async def send_leaderboard(_, message, callback=False, page_number=1):
 async def get_rep_and_chat_members(_, message):
     chat_id = message.chat.id
     users_rep_list = await get_all_reps(chat_id) # [user_rep, user_id]
-    if (users_rep_list == {}):
+    if (users_rep_list == []):
         await message.reply_text("Todavía no hay un listado de reputaciones en este grupo.\n"
-                                     "Respondé con + o - al mensaje de alguien")
+                                     "Respondé con + o - al mensaje de alguien.")
         return None, None, None
 
     chat_members = []
