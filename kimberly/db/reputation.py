@@ -5,7 +5,7 @@ from db.mongodb import db
 grps = db.groups
 
 
-async def get_all_reps(chat_id):
+async def get_all_reps_and_ids(chat_id):
     user_rep_list = await find_one_doc(grps, {"group": chat_id}, {"_id": 0, "users":1})
     if (user_rep_list != {}):
         users_array = user_rep_list["users"]

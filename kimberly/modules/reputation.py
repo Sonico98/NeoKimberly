@@ -1,5 +1,5 @@
 from utils.lists import list_to_text
-from db.reputation import store_rep, get_user_reps, get_all_reps
+from db.reputation import store_rep, get_user_reps, get_all_reps_and_ids
 from neokimberly import kimberly
 from pyrogram import filters
 import re
@@ -75,12 +75,12 @@ async def change_page(_, callback_query):
 
 
 async def send_leaderboard(_, message, callback=False, page_number=1):
-    users_rep_list, chat_members, msg_header = await get_rep_and_chat_members(_, message)
-    if (users_rep_list is not None and chat_members is not None):
+    users_and_rep, chat_members, msg_header = await get_rep_and_chat_members(_, message)
+    if (users_and_rep is not None and chat_members is not None):
         if (not callback):
             reply = await message.reply_text(msg_header)
             message = reply
-        total_pages, rep_list = await build_rep_list(users_rep_list, chat_members, page_number)
+        total_pages, rep_list = await build_rep_list(users_and_rep, chat_members, page_number)
         keyboard = ""
         if (total_pages > 1):
             keyboard = InlineKeyboard()
@@ -92,8 +92,8 @@ async def send_leaderboard(_, message, callback=False, page_number=1):
 
 async def get_rep_and_chat_members(_, message):
     chat_id = message.chat.id
-    users_rep_list = await get_all_reps(chat_id) # [user_rep, user_id]
-    if (users_rep_list == []):
+    users_and_rep = await get_all_reps_and_ids(chat_id) # [user_rep, user_id]
+    if (users_and_rep == []):
         await message.reply_text("Todavía no hay un listado de reputaciones en este grupo.\n"
                                      "Respondé con + o - al mensaje de alguien.")
         return None, None, None
@@ -103,54 +103,48 @@ async def get_rep_and_chat_members(_, message):
         chat_members.append(member.user.id)
 
     msg_header = "**Social credit leaderboard**"
-    return users_rep_list, chat_members, msg_header
+    return users_and_rep, chat_members, msg_header
 
 
-# TODO: Maybe we can avoid splitting users and reps into 2 different lists
-async def build_rep_list(user_rep_list, chat_members, page_number):
-    # We receive the ids and reps in groups,
-    # so we have to split them into two lists
-    all_user_ids_in_db = [[]]
-    all_user_reps_in_db = [[]]
-    pos = 0
-    for i, rep_list in enumerate(user_rep_list):
-        if (i > 0 and i % 15 == 0):
-            all_user_ids_in_db.append([])
-            all_user_reps_in_db.append([])
-            pos += 1
-        all_user_ids_in_db[pos].append(rep_list[1])
-        all_user_reps_in_db[pos].append(rep_list[0])
-    total_pages = len(all_user_ids_in_db)
+async def build_rep_list(users_and_rep, chat_members, page_number):
+    # Split the list into chunks of 15 users each
+    # and work only with the Nth group of 15 users,
+    # where N = page_number
+    all_users_and_rep_in_db = [
+        users_and_rep[i * 15:(i + 1) * 15]
+        for i in range((len(users_and_rep) + 15 - 1) // 15 )
+    ]
+    users_and_reps_in_db = all_users_and_rep_in_db[ page_number - 1 ]
+    total_pages = len(all_users_and_rep_in_db)
 
-    # Each group consists of 15 users, so that we query
-    # Telegram only for 15 users per page
-    group_of_users = all_user_ids_in_db[page_number - 1]
-    group_of_reps = all_user_reps_in_db[page_number - 1]
+    # Separate reps and ids into two different lists
+    user_ids_in_db = [ id[1] for id in users_and_reps_in_db ]
+    reps_in_db = [ rep[0] for rep in users_and_reps_in_db ]
 
     # Separate current group members from users that left the group
-    members_user_ids = []
-    current_users_reps = []
+    current_members_ids = []
+    current_members_reps = []
     for member in chat_members:
-        if member in group_of_users:
-            mem_pos = group_of_users.index(member)
-            members_user_ids.append(group_of_users[mem_pos])
-            current_users_reps.append(group_of_reps[mem_pos])
-            # Get rid of all the members currently in the group
-            del group_of_users[mem_pos]
-            del group_of_reps[mem_pos]
+        if member in user_ids_in_db:
+            memb_pos = user_ids_in_db.index(member)
+            current_members_ids.append(user_ids_in_db[memb_pos])
+            current_members_reps.append(reps_in_db[memb_pos])
+            del user_ids_in_db[memb_pos], reps_in_db[memb_pos]
+    previous_members_ids = user_ids_in_db
+    previous_members_reps = reps_in_db
 
-    # Sort the reputation list from largest to smallest
-    current_users = await kimberly.get_users(members_user_ids)
-    old_users = await kimberly.get_users(group_of_users)
-    assert isinstance(current_users, list)
-    assert isinstance(old_users, list)
+    current_members = await kimberly.get_users(current_members_ids)
+    old_members = await kimberly.get_users(previous_members_ids)
+    assert isinstance(current_members, list)
+    assert isinstance(old_members, list)
+
     rep_list = []
-    for index, user in enumerate(current_users):
-        rep_list.append(f"{current_users_reps[index]}  -  [{user.first_name}](tg://user?id={user.id})\n")
+    for index, member in enumerate(current_members):
+        rep_list.append(f"{current_members_reps[index]}  -  [{member.first_name}](tg://user?id={member.id})\n")
     # Don't add a link to members who left the group,
     # otherwise Telegram throws an error
-    for index, old_member in enumerate(old_users):
-        rep_list.append(f"{group_of_reps[index]}  -  {old_member.first_name}\n")
+    for index, old_member in enumerate(old_members):
+        rep_list.append(f"{previous_members_reps[index]}  -  {old_member.first_name}\n")
     rep_list.sort(reverse=True)
 
     return total_pages, rep_list
