@@ -2,3 +2,4 @@ git+https://github.com/pyrogram/pyrogram
 tgcrypto
 motor
 pykeyboard
+uvloop; platform_system == "Linux"
