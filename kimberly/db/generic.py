@@ -1,6 +1,7 @@
 from utils import generic_messages as gm
 
-error_result = { 
+
+error_result = {
     "acknowledged": "Error",
     "inserted_id": "Error",
     "matched_count": "Error",
@@ -9,7 +10,7 @@ error_result = {
 }
 
 
-async def find_one_doc(collection, data: dict, parameter: dict={}):
+async def find_one_doc(collection, data: dict, parameter: dict = {}):
     try:
         doc = await collection.find_one(data, parameter)
         if doc is not None:
@@ -32,7 +33,7 @@ async def find_docs(collection, key: dict):
 
 
 async def insert_doc(collection, new_doc):
-    try: 
+    try:
         result = await collection.insert_one(new_doc)
     except:
         print(gm.db_error_message)
@@ -57,4 +58,3 @@ async def update_doc(collection, match_condition: dict, new_data: dict):
         print(gm.db_error_message)
         result = error_result
     return result
-

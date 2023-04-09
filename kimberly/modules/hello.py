@@ -1,6 +1,7 @@
+import random
 from pyrogram import filters
 from neokimberly import kimberly
-import random
+
 
 regex_salute = "\\bhola\\b|\\bholi(s)?\\b|\\baló\\b|\\bola\\b|(bu|w)enas|\\bbuenos\\sd(i|í)as\\b"
 regex_gn = "\\bbuenas noches\\b|\\bhasta mañana\\b|\\bgn\\b|\\boyasumi\\b|\\bkonbanwa\\b|\\bgood night\\b"
@@ -16,13 +17,13 @@ def build_reply(message, answer):
 
 @kimberly.on_message(filters.group & filters.regex(regex_salute))
 @kimberly.on_edited_message(filters.group & filters.regex(regex_salute))
-async def hello(client, message):
+async def hello(_, message):
     answer = build_reply(message, salute_answers)
     await message.reply_text(answer, quote=False)
 
 
 @kimberly.on_message(filters.group & filters.regex(regex_gn))
 @kimberly.on_edited_message(filters.group & filters.regex(regex_gn))
-async def night(client, message):
+async def night(_, message):
     answer = build_reply(message, gn_answers)
     await message.reply_text(answer, quote=False)

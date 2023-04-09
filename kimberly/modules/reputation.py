@@ -1,13 +1,13 @@
-from utils.lists import list_to_text
-from db.reputation import store_rep, get_user_reps, get_all_reps_and_ids
-from neokimberly import kimberly
-from pyrogram import filters
 import re
 from pykeyboard import InlineKeyboard
+from pyrogram import filters
+from db.reputation import get_all_reps_and_ids, get_user_reps, store_rep
+from neokimberly import kimberly
+from utils.lists import list_to_text
 
 
-@kimberly.on_message(filters.group & filters.text & filters.reply & \
-                         filters.regex("^\\+{1,}$|^\\-{1,}$|^\\+[0-9]{1,}$|^\\-[0-9]{1,}$"), group=-2)
+@kimberly.on_message(filters.group & filters.text & filters.reply &
+                     filters.regex("^\\+{1,}$|^\\-{1,}$|^\\+[0-9]{1,}$|^\\-[0-9]{1,}$"), group=-2)
 async def change_rep(_, message):
     chat_id = message.chat.id
     receiving_user_id = message.reply_to_message.from_user.id
@@ -28,8 +28,8 @@ async def change_rep(_, message):
         await message.reply_text("No te quieras hacer el canchero.")
         return
 
-    patterns = [re.compile("\\+{1,}"), re.compile("\\-{1,}"), \
-        re.compile("\\+\\d{1,}"), re.compile("\\-\\d{1,}")]
+    patterns = [re.compile("\\+{1,}"), re.compile("\\-{1,}"),
+                re.compile("\\+\\d{1,}"), re.compile("\\-\\d{1,}")]
     for index, pattern in enumerate(patterns):
         match = pattern.fullmatch(message.text)
         if (match is not None):
@@ -55,10 +55,10 @@ async def change_rep(_, message):
             await store_rep(chat_id, receiving_user_id, rep_change)
             reps = await get_user_reps(chat_id, giving_user_id, receiving_user_id)
             await message.reply_text(rep_change_msg.format(
-                                             receiving_user_name,
-                                             giving_user_name, reps[0],
-                                             rep_change, reps[1]
-                                     ))
+                receiving_user_name,
+                giving_user_name, reps[0],
+                rep_change, reps[1]
+            ))
             return
 
 
@@ -92,10 +92,10 @@ async def send_leaderboard(_, message, callback=False, page_number=1):
 
 async def get_rep_and_chat_members(_, message):
     chat_id = message.chat.id
-    users_and_rep = await get_all_reps_and_ids(chat_id) # [user_rep, user_id]
+    users_and_rep = await get_all_reps_and_ids(chat_id)  # [user_rep, user_id]
     if (users_and_rep == []):
         await message.reply_text("Todavía no hay un listado de reputaciones en este grupo.\n"
-                                     "Respondé con + o - al mensaje de alguien.")
+                                 "Respondé con + o - al mensaje de alguien.")
         return None, None, None
 
     chat_members = []
@@ -112,14 +112,14 @@ async def build_rep_list(users_and_rep, chat_members, page_number):
     # where N = page_number
     all_users_and_rep_in_db = [
         users_and_rep[i * 15:(i + 1) * 15]
-        for i in range((len(users_and_rep) + 15 - 1) // 15 )
+        for i in range((len(users_and_rep) + 15 - 1) // 15)
     ]
-    users_and_reps_in_db = all_users_and_rep_in_db[ page_number - 1 ]
+    users_and_reps_in_db = all_users_and_rep_in_db[page_number - 1]
     total_pages = len(all_users_and_rep_in_db)
 
     # Separate reps and ids into two different lists
-    user_ids_in_db = [ id[1] for id in users_and_reps_in_db ]
-    reps_in_db = [ rep[0] for rep in users_and_reps_in_db ]
+    user_ids_in_db = [id[1] for id in users_and_reps_in_db]
+    reps_in_db = [rep[0] for rep in users_and_reps_in_db]
 
     # Separate current group members from users that left the group
     current_members_ids = []
@@ -140,11 +140,13 @@ async def build_rep_list(users_and_rep, chat_members, page_number):
 
     rep_list = []
     for index, member in enumerate(current_members):
-        rep_list.append(f"{current_members_reps[index]}  -  [{member.first_name}](tg://user?id={member.id})\n")
+        rep_list.append(
+            f"{current_members_reps[index]}  -  [{member.first_name}](tg://user?id={member.id})\n")
     # Don't add a link to members who left the group,
     # otherwise Telegram throws an error
     for index, old_member in enumerate(old_members):
-        rep_list.append(f"{previous_members_reps[index]}  -  {old_member.first_name}\n")
+        rep_list.append(
+            f"{previous_members_reps[index]}  -  {old_member.first_name}\n")
     rep_list.sort(reverse=True)
 
     return total_pages, rep_list

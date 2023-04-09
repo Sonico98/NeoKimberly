@@ -1,9 +1,9 @@
-from neokimberly import kimberly
-from db.mongodb import db_client
-from modules import *
-from pyrogram.sync import idle
 import asyncio
 import sys
+from pyrogram.sync import idle
+from db.mongodb import db_client
+from modules import *
+from neokimberly import kimberly
 
 
 async def get_server_info():
@@ -28,8 +28,8 @@ async def start_pyrogram():
         await kimberly.stop()
     except:
         print("\nError starting the bot. Please make sure you've " +
-        "filled out all the information required in the " +
-        "configuration file and that it's correct")
+              "filled out all the information required in the " +
+              "configuration file and that it's correct")
         sys.exit(2)
 
 
