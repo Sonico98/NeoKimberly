@@ -4,6 +4,7 @@ from pyrogram import filters
 from db.reputation import get_all_reps_and_ids, get_user_reps, store_rep
 from neokimberly import kimberly
 from utils.lists import list_to_text
+from natsort import realsorted
 
 
 @kimberly.on_message(filters.group & filters.text & filters.reply &
@@ -147,6 +148,7 @@ async def build_rep_list(users_and_rep, chat_members, page_number):
     for index, old_member in enumerate(old_members):
         rep_list.append(
             f"{previous_members_reps[index]}  -  {old_member.first_name}\n")
-    rep_list.sort(reverse=True)
+    # rep_list.sort(key=natural_keys, reverse=True)
+    realsorted(rep_list, reverse=True)
 
     return total_pages, rep_list
