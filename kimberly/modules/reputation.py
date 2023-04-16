@@ -149,6 +149,6 @@ async def build_rep_list(users_and_rep, chat_members, page_number):
         rep_list.append(
             f"{previous_members_reps[index]}  -  {old_member.first_name}\n")
     # rep_list.sort(key=natural_keys, reverse=True)
-    realsorted(rep_list, reverse=True)
+    rep_list = realsorted(rep_list, reverse=True)
 
     return total_pages, rep_list
