@@ -38,15 +38,4 @@ async def get_user_reps(chat_id, giving_user_id, receiving_user_id):
 
 
 async def store_rep(chat_id, user_id, rep_change):
-    existing_group_doc = await find_one_doc(grps, {"group": chat_id})
-    if (len(existing_group_doc) > 0):
-        matching_doc = {"group": chat_id, "users.user_id": user_id}
-        # Try to update an existing user's rep
-        result = await update_doc(grps, matching_doc, {"$inc": {"users.$.rep": rep_change}})
-        # If the user is not yet present in the group's user array, add it
-        if (repr(result.modified_count) == "0"):
-            await update_doc(grps, {"group": chat_id}, \
-                            {"$push": {"users": {"user_id": user_id, "rep": rep_change}}})
-    else:
-        await insert_doc(grps, { "group": chat_id, "users": \
-                               [ { "user_id": user_id, "rep": rep_change } ] })
+    await store_user_value(grps, chat_id, user_id, "rep", rep_change)
