@@ -17,8 +17,8 @@ regex_gn = "(?i)\\bbuenas noches\\b|" + \
            "\\bkonbanwa\\b|" + \
            "\\bgood night\\b"
 
-salute_answers = ['Hola ', 'Hola a todos, menos a ', 'Saludos, ']
-gn_answers = ['Buenas noches ', 'Tengan todos una buena noche, excepto ']
+salute_answers = ["Hola ", "Hola a todos, menos a ", "Saludos, "]
+gn_answers = ["Buenas noches ", "Tengan todos una buena noche, excepto "]
 
 
 def build_reply(message, answer):
