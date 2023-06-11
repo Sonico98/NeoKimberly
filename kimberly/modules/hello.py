@@ -3,8 +3,20 @@ from pyrogram import filters
 from neokimberly import kimberly
 
 
-regex_salute = "\\bhola\\b|\\bholi(s)?\\b|\\baló\\b|\\bola\\b|(bu|w)enas|\\bbuenos\\sd(i|í)as\\b"
-regex_gn = "\\bbuenas noches\\b|\\bhasta mañana\\b|\\bgn\\b|\\boyasumi\\b|\\bkonbanwa\\b|\\bgood night\\b"
+regex_salute = "(?i)\\bhola\\b|" + \
+               "\\bholi(s)?\\b|" + \
+               "\\baló\\b|" + \
+               "\\bola\\b|" + \
+               "^(muy)?(bu|w)enas(\\s)?(a\\stod(a|o)s|gente|chic(a|o)s|amig(a|o)s)?$|" + \
+               "\\bbuenos\\sd(i|í)as\\b"
+
+regex_gn = "(?i)\\bbuenas noches\\b|" + \
+           "^hasta mañana(\\s)?(gente|chic(a|o)s|amig(a|o)s)?$|" + \
+           "\\bgn\\b|" + \
+           "\\boyasumi\\b|" + \
+           "\\bkonbanwa\\b|" + \
+           "\\bgood night\\b"
+
 salute_answers = ['Hola ', 'Hola a todos, menos a ', 'Saludos, ']
 gn_answers = ['Buenas noches ', 'Tengan todos una buena noche, excepto ']
 
