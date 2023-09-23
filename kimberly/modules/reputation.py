@@ -39,18 +39,28 @@ async def change_rep(_, message):
                 for _ in message.text:
                     if (index == 0):
                         rep_change += 1
+                        # Hard limit rep changes to 10.
+                        # Might make it configurable in the future
+                        if (rep_change > 10):
+                            rep_change = 10
                         rep_change_msg = rep_increase_msg
                     else:
                         rep_change -= 1
+                        if (rep_change < -10):
+                            rep_change = -10
                         rep_change_msg = rep_decrease_msg
 
             # Pattern: +2, +58, +98342... or -2, -58, -98342...
             if (index == 2 or index == 3):
                 if (index == 2):
                     rep_change += int(message.text[1:])
+                    if (rep_change > 10):
+                        rep_change = 10
                     rep_change_msg = rep_increase_msg
                 else:
                     rep_change -= int(message.text[1:])
+                    if (rep_change < -10):
+                        rep_change = -10
                     rep_change_msg = rep_decrease_msg
 
             await store_rep(chat_id, receiving_user_id, rep_change)
