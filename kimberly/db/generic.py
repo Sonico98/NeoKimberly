@@ -21,10 +21,10 @@ async def find_one_doc(collection, data: dict, parameter: dict = {}):
     return {}
 
 
-async def find_docs(collection, key: dict):
+async def find_docs(collection, match_condition: dict):
     try:
-        cursor = collection.find(key)
-        docs = cursor.to_list(length=1000)
+        cursor = collection.find(match_condition)
+        docs = await cursor.to_list(length=1000)
         if docs is not None:
             return docs
     except:
@@ -81,10 +81,10 @@ async def store_group_value(collection, chat_id, field, value):
     if (len(existing_group_doc) > 0):
         matching_doc = {"group": chat_id}
         # Try to update an existing group's field
-        result = await update_doc(collection, matching_doc, {"$set": {f"{field}": value}})
+        result = await update_doc(collection, matching_doc, {"$set": {field: value}})
         # If the property is not yet present in the group, add it
         if (repr(result.modified_count) == "0"):
             await update_doc(collection, {"group": chat_id}, \
-                            {"$push": {f"{field}": value}})
+                            {"$push": {field: value}})
     else:
-        await insert_doc(collection, { "group": chat_id, f"{field}": value })
+        await insert_doc(collection, { "group": chat_id, field: value })

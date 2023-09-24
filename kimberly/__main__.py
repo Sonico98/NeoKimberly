@@ -1,9 +1,18 @@
 import asyncio
 import sys
 from pyrogram.sync import idle
+from config.login import *
 from db.mongodb import db_client
 from modules import *
 from neokimberly import kimberly
+from utils.time_parser import time_format_is_correct,timezone_exists
+
+
+async def parse_config():
+    if (not await timezone_exists(timezone)):
+        exit(2)
+    if (not await time_format_is_correct(nisman_time)):
+        exit(2)
 
 
 async def get_server_info():
@@ -34,6 +43,7 @@ async def start_pyrogram():
 
 
 async def main():
+    await parse_config()
     await get_server_info()
     await start_pyrogram()
 
