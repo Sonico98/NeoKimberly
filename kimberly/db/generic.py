@@ -60,6 +60,7 @@ async def update_doc(collection, match_condition: dict, new_data: dict):
     return result
 
 
+# TODO: Make store_user_value and store_group_value generic
 async def store_user_value(collection, chat_id, user_id, field, value):
     existing_group_doc = await find_one_doc(collection, {"group": chat_id})
     if (len(existing_group_doc) > 0):
@@ -73,3 +74,17 @@ async def store_user_value(collection, chat_id, user_id, field, value):
     else:
         await insert_doc(collection, { "group": chat_id, "users": \
                                [ { "user_id": user_id, f"{field}": value } ] })
+
+
+async def store_group_value(collection, chat_id, field, value):
+    existing_group_doc = await find_one_doc(collection, {"group": chat_id})
+    if (len(existing_group_doc) > 0):
+        matching_doc = {"group": chat_id}
+        # Try to update an existing group's field
+        result = await update_doc(collection, matching_doc, {"$set": {f"{field}": value}})
+        # If the property is not yet present in the group, add it
+        if (repr(result.modified_count) == "0"):
+            await update_doc(collection, {"group": chat_id}, \
+                            {"$push": {f"{field}": value}})
+    else:
+        await insert_doc(collection, { "group": chat_id, f"{field}": value })

@@ -7,3 +7,4 @@ bot_token = '0123456789:AAAAAAABBBBBBBCCCCCCCCDDDDDDDEEEEEE'
 # DB
 # https://motor.readthedocs.io/en/stable/examples/authentication.html
 uri = "mongodb://user:pass@localhost:27017"
+timezone = "America/Argentina/Buenos_Aires"
