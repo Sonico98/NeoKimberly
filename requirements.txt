@@ -4,3 +4,4 @@ tgcrypto
 motor
 pykeyboard
 natsort
+pytz
