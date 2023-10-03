@@ -4,6 +4,7 @@ from pyrogram.sync import idle
 from config.login import *
 from db.mongodb import db_client
 from modules import *
+from modules.nisman import build_timezones_list
 from neokimberly import kimberly
 from utils.time_parser import time_format_is_correct,timezone_exists
 
@@ -45,6 +46,7 @@ async def start_pyrogram():
 async def main():
     await parse_config()
     await get_server_info()
+    await build_timezones_list()
     await start_pyrogram()
 
 

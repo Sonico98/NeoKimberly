@@ -1,6 +1,8 @@
 from utils import generic_messages as gm
+from db.mongodb import db
 
 
+grps = db.groups
 error_result = {
     "acknowledged": "Error",
     "inserted_id": "Error",
@@ -21,9 +23,9 @@ async def find_one_doc(collection, data: dict, parameter: dict = {}):
     return {}
 
 
-async def find_docs(collection, match_condition: dict):
+async def find_docs(collection, match_condition: dict, projection: dict = {}):
     try:
-        cursor = collection.find(match_condition)
+        cursor = collection.find(match_condition, projection)
         docs = await cursor.to_list(length=1000)
         if docs is not None:
             return docs
@@ -88,3 +90,11 @@ async def store_group_value(collection, chat_id, field, value):
                             {"$push": {field: value}})
     else:
         await insert_doc(collection, { "group": chat_id, field: value })
+
+
+async def get_doc_id(query: dict):
+    doc = await find_one_doc(grps, query, { "_id": 1 })
+    if (len(doc) > 0):
+        doc_id = doc.get("id")
+        return doc_id
+    return -1
