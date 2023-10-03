@@ -2,7 +2,7 @@ from datetime import date, datetime, timedelta
 from pyrogram import filters
 import pytz
 from config.login import nisman_time, timezone
-from db.timezones import *
+from db.nisman import *
 from neokimberly import kimberly
 
 grps_time_data = []
@@ -32,6 +32,26 @@ async def add_to_grps_t_data(chat_id, timezone, nisman_time, nisman_day):
     }
     grps_time_data.append(group)
 
+
+# TODO: Implement divide and conquer
+async def search_group_in_list(chat_id):
+    for group in grps_time_data:
+        if (group.get("group") == chat_id):
+            return group
+    return None
+
+
+async def update_group_time_data(chat_id, timezone=None, nisman_time=None, nisman_day=None):
+    for group in grps_time_data:
+        if (group.get("group") == chat_id):
+            if (timezone is not None):
+                group.update({"timezone": timezone})
+            if (nisman_time is not None):
+                group.update({"nisman_time": nisman_time})
+            if (nisman_day is not None):
+                group.update({"nisman_day": nisman_day})
+
+
 # Set group's timezone when the bot is added to the group
 @kimberly.on_message(filters.group & filters.new_chat_members, group=-1)
 async def assign_default_group_timezone(_, message):
@@ -50,23 +70,22 @@ async def assign_default_group_timezone(_, message):
         else:
             print("Group already has timezone")
 
-# TODO: llamar a la funcion que va a actualizar la hora de nisman
-# TODO: implementar contador de nisman para usuario
+# TODO: check for special dates
 @kimberly.on_message(filters.group, group=-5)
 async def check_nisman(_, message):
     msg_datetime = message.date
     chat_id = message.chat.id
-    user = message.from_user.first_name
-    for i in range(len(grps_time_data)):
-        if (grps_time_data[i].get("group") == chat_id):
-            print("Entró")
-            grp_timezone = pytz.timezone(grps_time_data[i].get("timezone"))
-            grp_nisman_time = grps_time_data[i].get("nisman_time")
-            grp_nisman_day = grps_time_data[i].get("nisman_day")
-            grp_nisman_datetime = datetime.strptime(f"{grp_nisman_day} {grp_nisman_time}", "%Y-%m-%d %H:%M:%S").astimezone()
-            msg_datetime_timezone = msg_datetime.astimezone(grp_timezone)
-            if (msg_datetime_timezone >= grp_nisman_datetime):
-                await message.reply_text(f"{user} ha hecho la Nisman")
-                day = await get_today(timezone) + timedelta(days=1)
-                await set_group_nisman_day(chat_id, day)
-            return
+    user = message.from_user
+    group = await search_group_in_list(chat_id)
+    if (group is not None):
+        grp_timezone = pytz.timezone(group.get("timezone"))
+        grp_nisman_time = group.get("nisman_time")
+        grp_nisman_day = group.get("nisman_day")
+        grp_nisman_datetime = datetime.strptime(f"{grp_nisman_day} {grp_nisman_time}", "%Y-%m-%d %H:%M:%S").astimezone()
+        msg_datetime_timezone = msg_datetime.astimezone(grp_timezone)
+        if (msg_datetime_timezone >= grp_nisman_datetime):
+            await message.reply_text(f"{user.first_name} ha hecho la Nisman")
+            await store_nisman(chat_id, user.id, 1)
+            day = await get_today(timezone) + timedelta(days=1)
+            await update_group_time_data(chat_id, nisman_day=day)
+            await set_group_nisman_day(chat_id, day)

@@ -31,3 +31,7 @@ async def get_all_groups_times():
     if (len(res) > 0):
         return res
     return []
+
+
+async def store_nisman(chat_id, user_id, nisman_count):
+    await increase_user_value(grps, chat_id, user_id, "nismans", nisman_count)
