@@ -1,7 +1,7 @@
 import re
 from pykeyboard import InlineKeyboard
 from pyrogram import filters
-from db.reputation import get_all_reps_and_ids, get_user_reps, store_rep
+from db.reputation import get_user_ids_with_value, get_user_reps, store_rep
 from neokimberly import kimberly
 from utils.lists import list_to_text
 from natsort import realsorted
@@ -103,7 +103,7 @@ async def send_leaderboard(_, message, callback=False, page_number=1):
 
 async def get_rep_and_chat_members(_, message):
     chat_id = message.chat.id
-    users_and_rep = await get_all_reps_and_ids(chat_id)  # [user_rep, user_id]
+    users_and_rep = await get_user_ids_with_value(chat_id, "rep")  # [user_rep, user_id]
     if (users_and_rep == []):
         await message.reply_text("Todavía no hay un listado de reputaciones en este grupo.\n"
                                  "Respondé con + o - al mensaje de alguien.")

@@ -63,7 +63,7 @@ async def update_doc(collection, match_condition: dict, new_data: dict):
 
 
 # TODO: Make store_user_value and store_group_value generic
-async def store_user_value(collection, chat_id, user_id, field, value):
+async def increase_user_value(collection, chat_id, user_id, field, value):
     existing_group_doc = await find_one_doc(collection, {"group": chat_id})
     if (len(existing_group_doc) > 0):
         matching_doc = {"group": chat_id, "users.user_id": user_id}
@@ -90,6 +90,17 @@ async def store_group_value(collection, chat_id, field, value):
                             {"$push": {field: value}})
     else:
         await insert_doc(collection, { "group": chat_id, field: value })
+
+
+async def get_user_ids_with_value(chat_id, value):
+    complete_users_list = await find_one_doc(grps, {"group": chat_id}, {"_id": 0, "users":1})
+    if (complete_users_list != {}):
+        users_list = complete_users_list["users"]
+        complete_users_list = []
+        for u in users_list:
+            complete_users_list.append([u[value], u["user_id"]])
+
+    return sorted(complete_users_list, reverse=True)
 
 
 async def get_doc_id(query: dict):

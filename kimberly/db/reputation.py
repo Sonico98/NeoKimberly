@@ -5,17 +5,6 @@ from db.mongodb import db
 grps = db.groups
 
 
-async def get_all_reps_and_ids(chat_id):
-    user_rep_list = await find_one_doc(grps, {"group": chat_id}, {"_id": 0, "users":1})
-    if (user_rep_list != {}):
-        users_array = user_rep_list["users"]
-        user_rep_list = []
-        for u in users_array:
-            user_rep_list.append([u["rep"], u["user_id"]])
-
-    return sorted(user_rep_list, reverse=True)
-
-
 async def get_user_reps(chat_id, giving_user_id, receiving_user_id):
     # The user giving rep is probably not on the DB yet
     giving_user_doc = {}
@@ -38,4 +27,4 @@ async def get_user_reps(chat_id, giving_user_id, receiving_user_id):
 
 
 async def store_rep(chat_id, user_id, rep_change):
-    await store_user_value(grps, chat_id, user_id, "rep", rep_change)
+    await increase_user_value(grps, chat_id, user_id, "rep", rep_change)
