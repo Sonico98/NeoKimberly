@@ -67,4 +67,6 @@ async def check_nisman(_, message):
             msg_datetime_timezone = msg_datetime.astimezone(grp_timezone)
             if (msg_datetime_timezone >= grp_nisman_datetime):
                 await message.reply_text(f"{user} ha hecho la Nisman")
+                day = await get_today(timezone) + timedelta(days=1)
+                await set_group_nisman_day(chat_id, day)
             return
