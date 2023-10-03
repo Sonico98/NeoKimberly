@@ -23,9 +23,9 @@ async def find_one_doc(collection, data: dict, parameter: dict = {}):
     return {}
 
 
-async def find_docs(collection, match_condition: dict, projection: dict = {}):
+async def find_docs(collection, match_condition: dict, parameter: dict = {}):
     try:
-        cursor = collection.find(match_condition, projection)
+        cursor = collection.find(match_condition, parameter)
         docs = await cursor.to_list(length=1000)
         if docs is not None:
             return docs
