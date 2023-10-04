@@ -5,8 +5,8 @@ from config.login import nisman_time, timezone
 from db.nisman import *
 from neokimberly import kimberly
 from utils.users import is_admin
-from utils.time_parser import time_format_is_correct,date_format_is_correct
 from utils.leaderboard import send_leaderboard
+from utils.time_parser import time_format_is_correct,date_format_is_correct
 
 grps_time_data = []
 
@@ -63,6 +63,7 @@ async def update_group_time_data(chat_id, timezone=None, nisman_time=None, \
                 else:
                     for date in special_dates:
                         group.get("special_dates").append(date)
+
 
 async def group_date_exists(chat_id, date):
     group = await search_group_in_list(chat_id)
@@ -214,7 +215,7 @@ async def nisman_command(_, message):
     error_msg = "Todavía nadie hizo la Nisman en este grupo.\n" + \
                 "La Nisman es un juego que consiste en ser el primero en enviar " + \
                 "un mensaje a partir del horario establecido en /setup_hora_nisman."
-    await send_leaderboard(_, message, "nisman", "nisman_list", \
+    await send_leaderboard(_, message, "nismans", "nisman_list", \
                            header_msg=header_msg, error_msg=error_msg)
 
 
@@ -223,10 +224,10 @@ async def change_page(_, callback_query):
     next_page = int(callback_query.data.split(":")[1])
     message = callback_query.message
     header_msg = "**Ranking de Nisman**"
-    await send_leaderboard(_, message, "nisman", "nisman_list", \
+    await send_leaderboard(_, message, "nismans", "nisman_list", \
                            callback=True, page_number=next_page, header_msg=header_msg)
 
-@kimberly.on_message(filters.group & filters.command("add_fecha_nisman"))
+@kimberly.on_message(filters.group & filters.command("setup_add_fechas_nisman"))
 async def add_special_date(_, message):
     chat_id = message.chat.id
     user_id = message.from_user.id
@@ -250,11 +251,11 @@ async def add_special_date(_, message):
                 "haga la Nisman en una fecha especial, se le sumarán 2 puntos. "
                 "En el caso de Navidad, se sumarán 5 puntos, y en Año Nuevo, 3 puntos.\n"
                 f"Las fechas especiales en el grupo son: <code>{group.get('special_dates')}</code>\n\n"
-                "<b>Modo de uso:</b> <pre>/add_fecha_nisman «Mes-Día»</pre>\n"
-                "<b>Ejemplo:</b> <pre>/add_fecha_nisman 01-27</pre>")
+                "<b>Modo de uso:</b> <pre>/setup_add_fechas_nisman «Mes-Día»</pre>\n"
+                "<b>Ejemplo:</b> <pre>/setup_add_fechas_nisman 01-27</pre>")
 
 
-@kimberly.on_message(filters.group & filters.command("rm_fecha_nisman"))
+@kimberly.on_message(filters.group & filters.command("setup_rm_fechas_nisman"))
 async def add_special_date(_, message):
     chat_id = message.chat.id
     user_id = message.from_user.id
@@ -276,5 +277,5 @@ async def add_special_date(_, message):
             await message.reply_text("Con este comando podés quitar "
                 "fechas especiales de Nisman al grupo.\n"
                 f"Las fechas especiales en el grupo son: <code>{group.get('special_dates')}</code>\n\n"
-                "<b>Modo de uso:</b> <pre>/rm_fecha_nisman «Mes-Día»</pre>\n"
-                "<b>Ejemplo:</b> <pre>/rm_fecha_nisman 01-27</pre>")
+                "<b>Modo de uso:</b> <pre>/setup_rm_fechas_nisman «Mes-Día»</pre>\n"
+                "<b>Ejemplo:</b> <pre>/setup_rm_fechas_nisman 01-27</pre>")
