@@ -56,9 +56,10 @@ async def replace_doc(collection, old_doc: dict, new_data: dict):
 async def update_doc(collection, match_condition: dict, new_data: dict):
     try:
         result = await collection.update_one(match_condition, new_data)
-    except:
-        print(gm.db_error_message)
+    except Exception as e:
+        # print(gm.db_error_message)
         result = error_result
+        # print(e)
     return result
 
 
