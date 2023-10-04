@@ -15,15 +15,19 @@ async def group_has_tz(chat_id):
 
 
 async def set_group_timezone(chat_id, timezone: str):
-    await store_group_value(grps, chat_id, "timezone", timezone)
+    await modify_db_value(grps, chat_id, "timezone", timezone, "$set")
 
 
 async def set_group_nisman_time(chat_id, time: time):
-    await store_group_value(grps, chat_id, "nisman_time", str(time))
+    await modify_db_value(grps, chat_id, "nisman_time", str(time), "$set")
 
 
 async def set_group_nisman_day(chat_id, day: date):
-    await store_group_value(grps, chat_id, "nisman_day", str(day))
+    await modify_db_value(grps, chat_id, "nisman_day", str(day), "$set")
+
+
+async def set_group_special_date(chat_id, special_dates: list):
+    await modify_db_value(grps, chat_id, "special_dates", special_dates, "$set")
 
 
 async def get_all_groups_times():
@@ -34,4 +38,4 @@ async def get_all_groups_times():
 
 
 async def store_nisman(chat_id, user_id, nisman_count):
-    await increase_user_value(grps, chat_id, user_id, "nismans", nisman_count)
+    await modify_db_value(grps, chat_id, "nismans", nisman_count, "$inc", user_id)

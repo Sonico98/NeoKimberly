@@ -27,4 +27,4 @@ async def get_user_reps(chat_id, giving_user_id, receiving_user_id):
 
 
 async def store_rep(chat_id, user_id, rep_change):
-    await increase_user_value(grps, chat_id, user_id, "rep", rep_change)
+    await modify_db_value(grps, chat_id, "rep", rep_change, "$inc", user_id)

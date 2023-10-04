@@ -63,34 +63,29 @@ async def update_doc(collection, match_condition: dict, new_data: dict):
     return result
 
 
-# TODO: Make store_user_value and store_group_value generic
-async def increase_user_value(collection, chat_id, user_id, field, value):
+async def modify_db_value(collection, chat_id, field, value, operation, user_id=None):
     existing_group_doc = await find_one_doc(collection, {"group": chat_id})
     if (len(existing_group_doc) > 0):
-        matching_doc = {"group": chat_id, "users.user_id": user_id}
-        # Try to update an existing user's field
-        result = await update_doc(collection, matching_doc, {"$inc": {f"users.$.{field}": value}})
-        # If the user is not yet present in the group's user array, add it
-        if (repr(result.modified_count) == "0"):
-            await update_doc(collection, {"group": chat_id}, \
-                            {"$push": {"users": {"user_id": user_id, f"{field}": value}}})
-    else:
-        await insert_doc(collection, { "group": chat_id, "users": \
-                               [ { "user_id": user_id, f"{field}": value } ] })
-
-
-async def store_group_value(collection, chat_id, field, value):
-    existing_group_doc = await find_one_doc(collection, {"group": chat_id})
-    if (len(existing_group_doc) > 0):
+        field_prefix = ""
         matching_doc = {"group": chat_id}
+        if (user_id is not None):
+            matching_doc = {"group": chat_id, "users.user_id": user_id}
+            field_prefix = "users.$."
         # Try to update an existing group's field
-        result = await update_doc(collection, matching_doc, {"$set": {field: value}})
+        result = await update_doc(collection, matching_doc, { operation: { f"{field_prefix}{field}": value } } )
         # If the property is not yet present in the group, add it
         if (repr(result.modified_count) == "0"):
-            await update_doc(collection, {"group": chat_id}, \
-                            {"$push": {field: value}})
+            push_operation = { "$push": { field: value } }
+            if (user_id is not None):
+                push_operation = { "$push": { "users": { "user_id": user_id, f"{field}": value } } }
+            await update_doc(collection, {"group": chat_id}, push_operation)
     else:
-        await insert_doc(collection, { "group": chat_id, field: value })
+        insert_operation = { "group": chat_id, field: value }
+        if (user_id is not None):
+            insert_operation = { "group": chat_id, "users": \
+                               [ { "user_id": user_id, f"{field}": value } ] }
+
+        await insert_doc(collection, insert_operation)
 
 
 async def get_user_ids_with_value(chat_id, value):
