@@ -25,14 +25,15 @@ async def get_today(timezone):
     return datetime.now(pytz.timezone(timezone)).date()
 
 
-async def add_to_grps_t_data(chat_id, timezone, nisman_time, nisman_day):
+async def add_to_grps_t_data(chat_id, timezone, nisman_time, nisman_day, special_dates: list):
     group_db_id = await get_doc_id({"group": chat_id})
     group = {
         "_id": group_db_id,
         "group": chat_id,
         "timezone": timezone,
         "nisman_time": nisman_time,
-        "nisman_day": nisman_day
+        "nisman_day": nisman_day,
+        "special_dates": special_dates
     }
     grps_time_data.append(group)
 
@@ -45,7 +46,8 @@ async def search_group_in_list(chat_id):
     return None
 
 
-async def update_group_time_data(chat_id, timezone=None, nisman_time=None, nisman_day=None):
+async def update_group_time_data(chat_id, timezone=None, nisman_time=None, \
+                                 nisman_day=None, special_dates=None, rm_date=False):
     for group in grps_time_data:
         if (group.get("group") == chat_id):
             if (timezone is not None):
@@ -54,6 +56,12 @@ async def update_group_time_data(chat_id, timezone=None, nisman_time=None, nisma
                 group.update({"nisman_time": nisman_time})
             if (nisman_day is not None):
                 group.update({"nisman_day": nisman_day})
+            if (special_dates is not None):
+                if (rm_date):
+                    for date in special_dates:
+                        group.get("special_dates").remove(date)
+                else:
+                    group.get("special_dates").append(special_dates)
 
 
 # Set group's timezone when the bot is added to the group
@@ -70,7 +78,8 @@ async def assign_default_group_timezone(_, message):
             await assign_time(chat_id, nisman_time)
             day = await get_today(timezone) + timedelta(days=1)
             await set_group_nisman_day(chat_id, day)
-            await add_to_grps_t_data(chat_id, timezone, nisman_time, day)
+            await set_group_special_date(chat_id, ["12-25", "01-01"]) # Navidad y Año Nuevo
+            await add_to_grps_t_data(chat_id, timezone, nisman_time, day, ["12-25", "01-01"])
         else:
             print("Group already has timezone")
 
@@ -133,7 +142,6 @@ async def setup_time(_, message):
     else:
         message.reply_text("Este comando sólo está disponible para administradores.")
 
-# TODO: check for special dates
 # TODO: think of another way of checking for messages to prevent floodwaits
 @kimberly.on_message(filters.group & filters.text, group=-5)
 async def check_nisman(_, message):
@@ -146,11 +154,47 @@ async def check_nisman(_, message):
     grp_timezone = pytz.timezone(group.get("timezone"))
     grp_n_time = group.get("nisman_time")
     grp_n_day = group.get("nisman_day")
-    grp_nisman_datetime = grp_timezone.localize(datetime.strptime(f"{grp_n_day} {grp_n_time}", "%Y-%m-%d %H:%M:%S"))
-    msg_datetime_timezone = msg_datetime.astimezone(grp_timezone)
-    if (msg_datetime_timezone >= grp_nisman_datetime):
-        await message.reply_text(f"{user.first_name} ha hecho la Nisman")
-        await store_nisman(chat_id, user.id, 1)
+    grp_nisman_datetime = grp_timezone.localize(datetime.strptime(
+        f"{grp_n_day} {grp_n_time}", "%Y-%m-%d %H:%M:%S")
+    )
+    msg_datetime_tz_aware = msg_datetime.astimezone(grp_timezone)
+    if (msg_datetime_tz_aware >= grp_nisman_datetime):
+        christmas = False
+        new_year = False
+        special_date = False
+        nisman_points = 1
+        special_date_match = ""
+        special_dates = group.get("special_dates")
+        for month_and_day in special_dates: 
+            print(month_and_day)
+            current_year = datetime.now().year
+            date = datetime.strptime(f"{current_year}-{month_and_day}", "%Y-%m-%d")
+            if (date.astimezone(grp_timezone).date() == msg_datetime_tz_aware.date()):
+                if (month_and_day == "12-25"):
+                    christmas = True
+                elif (month_and_day == "01-01"):
+                    new_year = True
+                else:
+                    special_date = True
+                    special_date_match = month_and_day
+
+        if (msg_datetime_tz_aware in group.get("special_dates")):
+            pass
+        if (christmas):
+            await message.reply_text(f"¡<b>{user.first_name}</b> hizo la Nisman navideña!\n"
+                                        "Suma <b>5 puntos</b>.")
+            nisman_points = 5
+        elif (new_year):
+            await message.reply_text(f"¡<b>{user.first_name}</b> hizo la primer Nisman del año!\n"
+                                        "Suma <b>3 puntos</b>.")
+            nisman_points = 3
+        elif (special_date):
+            await message.reply_text(f"¡<b>{user.first_name}</b> hizo la Nisman especial " \
+                                        f"del {special_date_match}!\nSuma <b>2 puntos</b>.")
+            nisman_points = 2
+        else:
+            await message.reply_text(f"{user.first_name} hizo la Nisman")
+        await store_nisman(chat_id, user.id, nisman_points)
         day = await get_today(timezone) + timedelta(days=1)
         await update_group_time_data(chat_id, nisman_day=day)
         await set_group_nisman_day(chat_id, day)
@@ -162,7 +206,8 @@ async def nisman_command(_, message):
     error_msg = "Todavía nadie hizo la Nisman en este grupo.\n" + \
                 "La Nisman es un juego que consiste en ser el primero en enviar " + \
                 "un mensaje a partir del horario establecido en /setup_hora_nisman."
-    await send_leaderboard(_, message, "nisman", "nisman_list", header_msg=header_msg, error_msg=error_msg)
+    await send_leaderboard(_, message, "nisman", "nisman_list", \
+                           header_msg=header_msg, error_msg=error_msg)
 
 
 @kimberly.on_callback_query(filters.regex("nisman_list"))
@@ -170,5 +215,6 @@ async def change_page(_, callback_query):
     next_page = int(callback_query.data.split(":")[1])
     message = callback_query.message
     header_msg = "**Ranking de Nisman**"
-    await send_leaderboard(_, message, "nisman", "nisman_list", callback=True, page_number=next_page, header_msg=header_msg)
+    await send_leaderboard(_, message, "nisman", "nisman_list", \
+                           callback=True, page_number=next_page, header_msg=header_msg)
 

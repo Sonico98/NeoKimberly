@@ -47,7 +47,7 @@ async def build_paginated_leaderboard(users_and_value, chat_members, page_number
     users_and_value_in_db = all_users_and_value_in_db[page_number - 1]
     total_pages = len(all_users_and_value_in_db)
 
-    # Separate reps and ids into two different lists
+    # Separate values and ids into two different lists
     user_ids_in_db = [id[1] for id in users_and_value_in_db]
     values_in_db = [value[0] for value in users_and_value_in_db]
 
