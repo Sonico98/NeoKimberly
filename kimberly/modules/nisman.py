@@ -5,7 +5,7 @@ from config.login import nisman_time, timezone
 from db.nisman import *
 from neokimberly import kimberly
 from utils.users import is_admin
-from utils.time_parser import time_format_is_correct
+from utils.time_parser import time_format_is_correct,date_format_is_correct
 from utils.leaderboard import send_leaderboard
 
 grps_time_data = []
@@ -61,8 +61,17 @@ async def update_group_time_data(chat_id, timezone=None, nisman_time=None, \
                     for date in special_dates:
                         group.get("special_dates").remove(date)
                 else:
-                    group.get("special_dates").append(special_dates)
+                    for date in special_dates:
+                        group.get("special_dates").append(date)
 
+async def group_date_exists(chat_id, date):
+    group = await search_group_in_list(chat_id)
+    assert group is not None
+    group_dates = group.get("special_dates")
+    for gdate in group_dates:
+        if (date == gdate):
+            return True
+    return False
 
 # Set group's timezone when the bot is added to the group
 @kimberly.on_message(filters.group & filters.new_chat_members, group=-1)
@@ -78,7 +87,7 @@ async def assign_default_group_timezone(_, message):
             await assign_time(chat_id, nisman_time)
             day = await get_today(timezone) + timedelta(days=1)
             await set_group_nisman_day(chat_id, day)
-            await set_group_special_date(chat_id, ["12-25", "01-01"]) # Navidad y Año Nuevo
+            await add_group_special_date(chat_id, ["12-25", "01-01"]) # Navidad y Año Nuevo
             await add_to_grps_t_data(chat_id, timezone, nisman_time, day, ["12-25", "01-01"])
         else:
             print("Group already has timezone")
@@ -88,7 +97,9 @@ async def assign_default_group_timezone(_, message):
 async def setup_timezone(_, message):
     chat_id = message.chat.id
     user_id = message.from_user.id
-    if (await is_admin(chat_id, user_id)):
+    if (not await is_admin(chat_id, user_id)):
+        message.reply_text("Este comando sólo está disponible para administradores.")
+    else:
         if (len(message.command) > 1):
             timezone = message.command[1]
             if timezone in pytz.all_timezones:
@@ -112,15 +123,15 @@ async def setup_timezone(_, message):
                 f"El huso horario establecido para el grupo es: <code>{group.get('timezone')}</code>\n\n"
                 "<b>Modo de uso:</b> <pre>/setup_huso_horario «huso_horario»</pre>\n"
                 "<b>Ejemplo:</b> <pre>/setup_huso_horario America/Argentina/Buenos_Aires</pre>")
-    else:
-        message.reply_text("Este comando sólo está disponible para administradores.")
 
 
 @kimberly.on_message(filters.group & filters.command("setup_hora_nisman"))
 async def setup_time(_, message):
     chat_id = message.chat.id
     user_id = message.from_user.id
-    if (await is_admin(chat_id, user_id)):
+    if (not await is_admin(chat_id, user_id)):
+        message.reply_text("Este comando sólo está disponible para administradores.")
+    else:
         if (len(message.command) > 1):
             time = message.command[1]
             if (await time_format_is_correct(time)):
@@ -129,7 +140,6 @@ async def setup_time(_, message):
                 await message.reply_text(f"Se actualizó el horario de nisman del grupo a {time}.")
             else:
                 await message.reply_text(f"'{time}' no corresponde a un horario válido.")
-            pass
         else:
             group = await search_group_in_list(chat_id)
             # Because the group will always get added to the list as soon as the bot gets added to it
@@ -139,8 +149,6 @@ async def setup_time(_, message):
                 f"El horario establecido para el grupo es: <code>{group.get('nisman_time')}</code>\n\n"
                 "<b>Modo de uso:</b> <pre>/setup_hora_nisman «H:M:S»</pre>\n"
                 "<b>Ejemplo:</b> <pre>/setup_hora_nisman 20:05:00</pre>")
-    else:
-        message.reply_text("Este comando sólo está disponible para administradores.")
 
 # TODO: think of another way of checking for messages to prevent floodwaits
 @kimberly.on_message(filters.group & filters.text, group=-5)
@@ -200,7 +208,7 @@ async def check_nisman(_, message):
         await set_group_nisman_day(chat_id, day)
 
 
-@kimberly.on_message(filters.group & filters.text & filters.command("nisman"))
+@kimberly.on_message(filters.group & filters.command("nisman"))
 async def nisman_command(_, message):
     header_msg = "**Ranking de Nisman**"
     error_msg = "Todavía nadie hizo la Nisman en este grupo.\n" + \
@@ -218,3 +226,55 @@ async def change_page(_, callback_query):
     await send_leaderboard(_, message, "nisman", "nisman_list", \
                            callback=True, page_number=next_page, header_msg=header_msg)
 
+@kimberly.on_message(filters.group & filters.command("add_fecha_nisman"))
+async def add_special_date(_, message):
+    chat_id = message.chat.id
+    user_id = message.from_user.id
+    if (not await is_admin(chat_id, user_id)):
+        message.reply_text("Este comando sólo está disponible para administradores.")
+    else:
+        if (len(message.command) > 1):
+            fecha = message.command[1]
+            if (await date_format_is_correct(fecha)):
+                await add_group_special_date(chat_id, [fecha])
+                await update_group_time_data(chat_id, special_dates=[fecha])
+                await message.reply_text(f"Se añadió la fecha especial {fecha}.")
+            else:
+                await message.reply_text(f"'{fecha}' no corresponde a una fecha válida.")
+        else:
+            group = await search_group_in_list(chat_id)
+            # Because the group will always get added to the list as soon as the bot gets added to it
+            assert group is not None
+            await message.reply_text("Con este comando podés añadir "
+                "fechas especiales de Nisman al grupo. Cuando alguien "
+                "haga la Nisman en una fecha especial, se le sumarán 2 puntos. "
+                "En el caso de Navidad, se sumarán 5 puntos, y en Año Nuevo, 3 puntos.\n"
+                f"Las fechas especiales en el grupo son: <code>{group.get('special_dates')}</code>\n\n"
+                "<b>Modo de uso:</b> <pre>/add_fecha_nisman «Mes-Día»</pre>\n"
+                "<b>Ejemplo:</b> <pre>/add_fecha_nisman 01-27</pre>")
+
+
+@kimberly.on_message(filters.group & filters.command("rm_fecha_nisman"))
+async def add_special_date(_, message):
+    chat_id = message.chat.id
+    user_id = message.from_user.id
+    if (not await is_admin(chat_id, user_id)):
+        message.reply_text("Este comando sólo está disponible para administradores.")
+    else:
+        if (len(message.command) > 1):
+            fecha = message.command[1]
+            if (await group_date_exists(chat_id, fecha)):
+                await rm_group_special_date(chat_id, [fecha])
+                await update_group_time_data(chat_id, special_dates=[fecha], rm_date=True)
+                await message.reply_text(f"Se quitó la fecha especial {fecha}.")
+            else:
+                await message.reply_text(f"'{fecha}' no corresponde a una fecha existente.")
+        else:
+            group = await search_group_in_list(chat_id)
+            # Because the group will always get added to the list as soon as the bot gets added to it
+            assert group is not None
+            await message.reply_text("Con este comando podés quitar "
+                "fechas especiales de Nisman al grupo.\n"
+                f"Las fechas especiales en el grupo son: <code>{group.get('special_dates')}</code>\n\n"
+                "<b>Modo de uso:</b> <pre>/rm_fecha_nisman «Mes-Día»</pre>\n"
+                "<b>Ejemplo:</b> <pre>/rm_fecha_nisman 01-27</pre>")
