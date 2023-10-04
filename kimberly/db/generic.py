@@ -99,7 +99,10 @@ async def get_user_ids_with_value(chat_id, value):
         users_list = complete_users_list["users"]
         complete_users_list = []
         for u in users_list:
-            complete_users_list.append([u[value], u["user_id"]])
+            try:
+                complete_users_list.append([u[value], u["user_id"]])
+            except KeyError:
+                pass
 
     return sorted(complete_users_list, reverse=True)
 
