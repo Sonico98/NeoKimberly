@@ -6,6 +6,7 @@ from db.nisman import *
 from neokimberly import kimberly
 from utils.users import is_admin
 from utils.time_parser import time_format_is_correct
+from utils.leaderboard import send_leaderboard
 
 grps_time_data = []
 
@@ -125,8 +126,7 @@ async def setup_time(_, message):
             # Because the group will always get added to the list as soon as the bot gets added to it
             assert group is not None
             await message.reply_text("Con este comando podés configurar "
-                "a qué hora se hace la Nisman en el grupo. La Nisman es un juego "
-                "que consiste en ser el primero en enviar un mensaje a partir del horario establecido.\n"
+                "a qué hora se hace la Nisman en el grupo.\n"
                 f"El horario establecido para el grupo es: <code>{group.get('nisman_time')}</code>\n\n"
                 "<b>Modo de uso:</b> <pre>/setup_hora_nisman «H:M:S»</pre>\n"
                 "<b>Ejemplo:</b> <pre>/setup_hora_nisman 20:05:00</pre>")
@@ -154,3 +154,21 @@ async def check_nisman(_, message):
         day = await get_today(timezone) + timedelta(days=1)
         await update_group_time_data(chat_id, nisman_day=day)
         await set_group_nisman_day(chat_id, day)
+
+
+@kimberly.on_message(filters.group & filters.text & filters.command("nisman"))
+async def nisman_command(_, message):
+    header_msg = "**Ranking de Nisman**"
+    error_msg = "Todavía nadie hizo la Nisman en este grupo.\n" + \
+                "La Nisman es un juego que consiste en ser el primero en enviar " + \
+                "un mensaje a partir del horario establecido en /setup_hora_nisman."
+    await send_leaderboard(_, message, "nisman", "nisman_list", header_msg=header_msg, error_msg=error_msg)
+
+
+@kimberly.on_callback_query(filters.regex("nisman_list"))
+async def change_page(_, callback_query):
+    next_page = int(callback_query.data.split(":")[1])
+    message = callback_query.message
+    header_msg = "**Ranking de Nisman**"
+    await send_leaderboard(_, message, "nisman", "nisman_list", callback=True, page_number=next_page, header_msg=header_msg)
+
