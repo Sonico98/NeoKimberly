@@ -10,9 +10,9 @@ from utils.time_parser import time_format_is_correct,timezone_exists
 
 
 async def parse_config():
-    if (not await timezone_exists(timezone)):
+    if (not await timezone_exists(default_timezone)):
         exit(2)
-    if (not await time_format_is_correct(nisman_time)):
+    if (not await time_format_is_correct(default_nisman_time)):
         exit(2)
 
 

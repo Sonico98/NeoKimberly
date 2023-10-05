@@ -1,12 +1,12 @@
 from datetime import datetime, timedelta
 from pyrogram import filters
 import pytz
-from config.login import nisman_time, timezone
+from config.login import default_nisman_time, default_timezone
 from db.nisman import *
 from neokimberly import kimberly
-from utils.users import is_admin
 from utils.leaderboard import send_leaderboard
-from utils.time_parser import time_format_is_correct,date_format_is_correct
+from utils.time_parser import get_today, date_format_is_correct, time_format_is_correct
+from utils.users import is_admin
 
 grps_time_data = []
 
@@ -14,15 +14,6 @@ grps_time_data = []
 async def build_timezones_list():
     global grps_time_data
     grps_time_data = await get_all_groups_times()
-
-
-async def assign_time(chat_id, time):
-    gtime = datetime.strptime(time, "%H:%M:%S").time()
-    await set_group_nisman_time(chat_id, gtime)
-
-
-async def get_today(timezone):
-    return datetime.now(pytz.timezone(timezone)).date()
 
 
 async def add_to_grps_t_data(chat_id, timezone, nisman_time, nisman_day, special_dates: list):
@@ -83,13 +74,8 @@ async def assign_default_group_timezone(_, message):
     if (user.is_self):
         chat_id = message.chat.id
         if (not await group_has_tz(chat_id)):
-            await set_group_timezone(chat_id, timezone)
-            # We already check if the time format is correct when starting the bot
-            await assign_time(chat_id, nisman_time)
-            day = await get_today(timezone) + timedelta(days=1)
-            await set_group_nisman_day(chat_id, day)
-            await add_group_special_date(chat_id, ["12-25", "01-01"]) # Navidad y Año Nuevo
-            await add_to_grps_t_data(chat_id, timezone, nisman_time, day, ["12-25", "01-01"])
+            day = await set_group_nisman_defaults(chat_id)
+            await add_to_grps_t_data(chat_id, default_timezone, default_nisman_time, day, ["12-25", "01-01"])
         else:
             print("Group already has timezone")
 
@@ -136,7 +122,7 @@ async def setup_time(_, message):
         if (len(message.command) > 1):
             time = message.command[1]
             if (await time_format_is_correct(time)):
-                await assign_time(chat_id, time)
+                await set_group_nisman_time(chat_id, time)
                 await update_group_time_data(chat_id, nisman_time=time)
                 await message.reply_text(f"Se actualizó el horario de nisman del grupo a {time}.")
             else:
@@ -181,11 +167,14 @@ async def check_nisman(_, message):
             if (date.astimezone(grp_timezone).date() == msg_datetime_tz_aware.date()):
                 if (month_and_day == "12-25"):
                     christmas = True
+                    return
                 elif (month_and_day == "01-01"):
                     new_year = True
+                    return
                 else:
                     special_date = True
                     special_date_match = month_and_day
+                    return
 
         if (msg_datetime_tz_aware in group.get("special_dates")):
             pass
@@ -204,7 +193,7 @@ async def check_nisman(_, message):
         else:
             await message.reply_text(f"{user.first_name} hizo la Nisman")
         await store_nisman(chat_id, user.id, nisman_points)
-        day = await get_today(timezone) + timedelta(days=1)
+        day = await get_today(default_timezone) + timedelta(days=1)
         await update_group_time_data(chat_id, nisman_day=day)
         await set_group_nisman_day(chat_id, day)
 

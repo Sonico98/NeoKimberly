@@ -25,3 +25,7 @@ async def timezone_exists(timezone):
         return True
     print(f"The timezone '{timezone}' does not exist")
     return False
+
+
+async def get_today(timezone):
+    return datetime.now(pytz.timezone(timezone)).date()
