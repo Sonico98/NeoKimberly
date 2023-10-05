@@ -226,9 +226,12 @@ async def add_special_date(_, message):
         if (len(message.command) > 1):
             fecha = message.command[1]
             if (await date_format_is_correct(fecha)):
-                await add_group_special_date(chat_id, [fecha])
-                await update_group_time_data(chat_id, special_dates=[fecha])
-                await message.reply_text(f"Se añadió la fecha especial {fecha}.")
+                if (await group_date_exists(chat_id, fecha)):
+                    await message.reply_text(f"La fecha {fecha} ya existe.")
+                else:
+                    await add_group_special_date(chat_id, [fecha])
+                    await update_group_time_data(chat_id, special_dates=[fecha])
+                    await message.reply_text(f"Se añadió la fecha especial {fecha}.")
             else:
                 await message.reply_text(f"'{fecha}' no corresponde a una fecha válida.")
         else:
