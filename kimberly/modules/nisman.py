@@ -77,7 +77,7 @@ async def assign_default_group_timezone(_, message):
             day = await set_group_nisman_defaults(chat_id)
             await add_to_grps_t_data(chat_id, default_timezone, default_nisman_time, day, ["12-25", "01-01"])
         else:
-            print("Group already has timezone")
+            print(f"Group {chat_id} already has timezone")
 
 
 @kimberly.on_message(filters.group & filters.command("setup_huso_horario"))
@@ -85,7 +85,7 @@ async def setup_timezone(_, message):
     chat_id = message.chat.id
     user_id = message.from_user.id
     if (not await is_admin(chat_id, user_id)):
-        message.reply_text("Este comando sólo está disponible para administradores.")
+        await message.reply_text("Este comando sólo está disponible para administradores.")
     else:
         if (len(message.command) > 1):
             timezone = message.command[1]
@@ -117,7 +117,7 @@ async def setup_time(_, message):
     chat_id = message.chat.id
     user_id = message.from_user.id
     if (not await is_admin(chat_id, user_id)):
-        message.reply_text("Este comando sólo está disponible para administradores.")
+        await message.reply_text("Este comando sólo está disponible para administradores.")
     else:
         if (len(message.command) > 1):
             time = message.command[1]
@@ -161,7 +161,6 @@ async def check_nisman(_, message):
         special_date_match = ""
         special_dates = group.get("special_dates")
         for month_and_day in special_dates: 
-            print(month_and_day)
             current_year = datetime.now().year
             date = datetime.strptime(f"{current_year}-{month_and_day}", "%Y-%m-%d")
             if (date.astimezone(grp_timezone).date() == msg_datetime_tz_aware.date()):
@@ -221,7 +220,7 @@ async def add_special_date(_, message):
     chat_id = message.chat.id
     user_id = message.from_user.id
     if (not await is_admin(chat_id, user_id)):
-        message.reply_text("Este comando sólo está disponible para administradores.")
+        await message.reply_text("Este comando sólo está disponible para administradores.")
     else:
         if (len(message.command) > 1):
             fecha = message.command[1]
@@ -252,7 +251,7 @@ async def add_special_date(_, message):
     chat_id = message.chat.id
     user_id = message.from_user.id
     if (not await is_admin(chat_id, user_id)):
-        message.reply_text("Este comando sólo está disponible para administradores.")
+        await message.reply_text("Este comando sólo está disponible para administradores.")
     else:
         if (len(message.command) > 1):
             fecha = message.command[1]
