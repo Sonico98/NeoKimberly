@@ -138,7 +138,7 @@ async def setup_time(_, message):
                 "<b>Ejemplo:</b> <pre>/setup_hora_nisman 20:05:00</pre>")
 
 # TODO: think of another way of checking for messages to prevent floodwaits
-@kimberly.on_message(filters.group & filters.text, group=-5)
+@kimberly.on_message(filters.group & ~(filters.bot) & ~(filters.outgoing) & ~(filters.service), group=-5)
 async def check_nisman(_, message):
     msg_datetime = message.date
     chat_id = message.chat.id
