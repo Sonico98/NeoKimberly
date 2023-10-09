@@ -27,8 +27,6 @@ async def get_user_reps(chat_id, giving_user_id, receiving_user_id):
 
     receiving_user_doc = await find_one_doc(grps, { "$and": [{"group": chat_id}, \
                                {"users.user_id": receiving_user_id}] }, {"users.rep.$":1})
-    print(giving_user_doc)
-    print(receiving_user_doc)
     # Get the last value in the list (an array), 
     # then the only element in that array (a dictionary),
     # and lastly get the value of the "rep" key in the dictionary
@@ -36,6 +34,44 @@ async def get_user_reps(chat_id, giving_user_id, receiving_user_id):
     receiving_user_rep = list(receiving_user_doc.values())[-1][0]["rep"]
 
     return [giving_user_rep, receiving_user_rep]
+
+
+async def choose_rep_change_msg(chat_id, dec=False):
+    rep_change_msg = ""
+    group_rep_msg = await get_group_rep_msg(chat_id, dec)
+    if (dec):
+        if (group_rep_msg == {}):
+            # Default decrease message
+            rep_change_msg = ("{usuario_da} ({rep_usuario_da}) ha "
+                              "decrementado la reputación de {usuario_recibe} en "
+                              "{cambio_rep} puntos. La nueva reputación de "
+                              "{usuario_recibe} es de: {rep_usuario_recibe}.")
+        else:
+            rep_change_msg = group_rep_msg.get("rep_dec_msg")
+    else:
+        if (group_rep_msg == {}):
+            # Default increase message
+            rep_change_msg = ("{usuario_da} ({rep_usuario_da}) ha "
+                              "incrementado la reputación de {usuario_recibe} en "
+                              "{cambio_rep} puntos. La nueva reputación de "
+                              "{usuario_recibe} es de: {rep_usuario_recibe}.")
+        else:
+            rep_change_msg = group_rep_msg.get("rep_inc_msg")
+    return rep_change_msg
+
+
+async def get_group_rep_msg(chat_id, dec=False):
+    filter = "rep_inc_msg"
+    if (dec):
+        filter = "rep_dec_msg"
+    return await find_one_doc(grps, { "group": chat_id }, { "_id": 0, filter: 1 })
+
+
+async def set_group_rep_msg(chat_id, msg, dec=False):
+    field = "rep_inc_msg"
+    if (dec):
+        field = "rep_dec_msg"
+    await modify_db_value(grps, chat_id, field, msg, "$set")
 
 
 async def store_rep(chat_id, user_id, rep_change):
