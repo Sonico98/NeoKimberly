@@ -75,7 +75,6 @@ async def modify_db_value(collection, chat_id, field, value, operation, user_id=
         result = await update_doc(collection, matching_doc, { operation: { f"{field_prefix}{field}": value } } )
         # If the property is not yet present in the group, add it
         if (repr(result.modified_count) == "0"):
-            print(f"modif0 {field}, {value}")
             push_operation = { "$push": { field: value } }
             if (user_id is not None):
                 push_operation = { "$push": { "users": { "user_id": user_id, f"{field}": value } } }
