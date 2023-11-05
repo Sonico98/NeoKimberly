@@ -146,6 +146,14 @@ async def check_nisman(_, message):
     group = await search_group_in_list(chat_id)
     # Because the group will always get added to the list as soon as the bot gets added to it
     assert group is not None
+    # Don't increase the nisman count for each message in an album
+    try:
+        grouped_messages = await kimberly.get_media_group(chat_id, message.id)
+        if (grouped_messages[0].id != message.id):
+            return
+    except:
+        pass
+
     grp_timezone = pytz.timezone(group.get("timezone"))
     grp_n_time = group.get("nisman_time")
     grp_n_day = group.get("nisman_day")
