@@ -174,14 +174,11 @@ async def check_nisman(_, message):
             if (date.astimezone(grp_timezone).date() == msg_datetime_tz_aware.date()):
                 if (month_and_day == "12-25"):
                     christmas = True
-                    return
                 elif (month_and_day == "01-01"):
                     new_year = True
-                    return
                 else:
                     special_date = True
                     special_date_match = month_and_day
-                    return
 
         if (msg_datetime_tz_aware in group.get("special_dates")):
             pass
