@@ -1,6 +1,6 @@
 import re
 from pyrogram import filters
-from db.reputation import choose_rep_change_msg, get_user_reps, set_group_rep_msg, store_rep
+from db.reputation import choose_rep_change_msg, get_group_rep_msg_enabled, get_user_reps, set_group_rep_msg, store_rep, toggle_group_rep_msg
 from neokimberly import kimberly
 from utils.leaderboard import send_leaderboard
 from utils.users import is_admin
@@ -26,6 +26,7 @@ async def change_rep(_, message):
         match = pattern.fullmatch(message.text)
         if (match is not None):
             rep_change_msg = ""
+            show_rep_change_msg = await get_group_rep_msg_enabled(chat_id)
 
             # Pattern: +, +++, +++++... or -, ---, -----...
             if (index == 0 or index == 1):
@@ -36,12 +37,14 @@ async def change_rep(_, message):
                         # Might make it configurable in the future
                         if (rep_change > 10):
                             rep_change = 10
-                        rep_change_msg = await choose_rep_change_msg(chat_id)
+                        if (show_rep_change_msg):
+                            rep_change_msg = await choose_rep_change_msg(chat_id)
                     else:
                         rep_change -= 1
                         if (rep_change < -10):
                             rep_change = -10
-                        rep_change_msg = await choose_rep_change_msg(chat_id, dec=True)
+                        if (show_rep_change_msg):
+                            rep_change_msg = await choose_rep_change_msg(chat_id, dec=True)
 
             # Pattern: +2, +58, +98342... or -2, -58, -98342...
             if (index == 2 or index == 3):
@@ -49,29 +52,34 @@ async def change_rep(_, message):
                     rep_change += int(message.text[1:])
                     if (rep_change > 10):
                         rep_change = 10
-                    rep_change_msg = await choose_rep_change_msg(chat_id)
+                    if (show_rep_change_msg):
+                        rep_change_msg = await choose_rep_change_msg(chat_id)
                 else:
                     rep_change -= int(message.text[1:])
                     if (rep_change < -10):
                         rep_change = -10
-                    rep_change_msg = await choose_rep_change_msg(chat_id, dec=True)
+                    if (show_rep_change_msg):
+                        rep_change_msg = await choose_rep_change_msg(chat_id, dec=True)
 
             await store_rep(chat_id, receiving_user_id, rep_change)
-            reps = await get_user_reps(chat_id, giving_user_id, receiving_user_id)
-            assert rep_change_msg is not None
-            await message.reply_text(rep_change_msg.replace(
-                "{usuario_da}", f"**{giving_user_name}**"
-            ).replace(
-                "{usuario_recibe}", f"**{receiving_user_name}**"
-            ).replace(
-                "{usuario_recibe}", f"**{receiving_user_name}**"
-            ).replace(
-                "{rep_usuario_da}", f"**{reps[0]}**"
-            ).replace(
-                "{rep_usuario_recibe}", f"**{reps[1]}**"
-            ).replace(
-                "{cambio_rep}", f"**{rep_change}**"
-            ))
+            if (show_rep_change_msg):
+                reps = await get_user_reps(chat_id, giving_user_id, receiving_user_id)
+                assert rep_change_msg is not None
+                await message.reply_text(rep_change_msg.replace(
+                    "{usuario_da}", f"**{giving_user_name}**"
+                ).replace(
+                    "{usuario_recibe}", f"**{receiving_user_name}**"
+                ).replace(
+                    "{usuario_recibe}", f"**{receiving_user_name}**"
+                ).replace(
+                    "{rep_usuario_da}", f"**{reps[0]}**"
+                ).replace(
+                    "{rep_usuario_recibe}", f"**{reps[1]}**"
+                ).replace(
+                    "{cambio_rep}", f"**{rep_change}**"
+                ))
+            else:
+                await kimberly.send_reaction(chat_id, message.id, emoji="👍")
             return
 
 
@@ -89,6 +97,21 @@ async def change_page(_, callback_query):
     message = callback_query.message
     header_msg = "**Social credit leaderboard**"
     await send_leaderboard(_, message, "rep", "rep_list", callback=True, page_number=next_page, header_msg=header_msg)
+
+
+@kimberly.on_message(filters.group & filters.text & filters.command("setup_toggle_msg_rep"))
+async def toggle_msg_rep(_, message):
+    chat_id = message.chat.id
+    user_id = message.from_user.id
+    if (not await is_admin(chat_id, user_id)):
+        await message.reply_text("Este comando sólo está disponible para administradores.")
+    else:
+        await toggle_group_rep_msg(chat_id)
+        enabled = await get_group_rep_msg_enabled(chat_id)
+        if enabled:
+            await message.reply_text("Ahora el bot enviará un mensaje al cambiar la reputación de un usuario.")
+        else:
+            await message.reply_text("Ahora el bot no enviará ningún mensaje al cambiar la reputación de un usuario.")
 
 
 @kimberly.on_message(filters.group & filters.text & filters.command("setup_msg_rep"))

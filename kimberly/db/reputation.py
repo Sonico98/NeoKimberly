@@ -60,6 +60,21 @@ async def choose_rep_change_msg(chat_id, dec=False):
     return rep_change_msg
 
 
+async def toggle_group_rep_msg(chat_id):
+    filter = "rep_msg_enabled"
+    enabled = await get_group_rep_msg_enabled(chat_id)
+    await modify_db_value(grps, chat_id, filter, not enabled, "$set")
+
+
+async def get_group_rep_msg_enabled(chat_id):
+    filter = "rep_msg_enabled"
+    enabled = await find_one_doc(grps, { "group": chat_id }, { "_id": 0, filter: 1 })
+    if enabled == {}:
+        await modify_db_value(grps, chat_id, filter, True, "$set")
+        return True
+    return enabled[filter]
+
+
 async def get_group_rep_msg(chat_id, dec=False):
     filter = "rep_inc_msg"
     if (dec):
