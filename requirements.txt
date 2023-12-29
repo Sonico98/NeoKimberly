@@ -1,5 +1,5 @@
 uvloop; platform_system == "Linux"
-git+https://github.com/pyrogram/pyrogram
+git+https://github.com/KurimuzonAkuma/pyrogram/
 tgcrypto
 motor
 pykeyboard
