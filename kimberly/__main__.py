@@ -3,7 +3,6 @@ import sys
 from pyrogram.sync import idle
 from config.login import *
 from db.mongodb import db_client
-from db.generic import migrate_ids
 from modules import *
 from modules.nisman import build_timezones_list
 from neokimberly import kimberly
@@ -48,7 +47,6 @@ async def main():
     await parse_config()
     await get_server_info()
     await build_timezones_list()
-    await migrate_ids()
     await start_pyrogram()
 
 

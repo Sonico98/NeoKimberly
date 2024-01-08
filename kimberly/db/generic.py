@@ -11,18 +11,6 @@ error_result = {
     "upserted_count": "Error"
 }
 
-async def migrate_ids():
-    groups = await find_docs(grps, {})
-    for group in groups:
-        print(group)
-        old_doc = group["_id"]
-        group.update({"_id": group["group"]})
-        del group["group"]
-        await insert_doc(grps, group)
-        await grps.delete_one({'_id': old_doc})
-
-
-
 
 async def find_one_doc(collection, data: dict, parameter: dict = {}):
     try:
