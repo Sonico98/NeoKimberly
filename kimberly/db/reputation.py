@@ -11,7 +11,7 @@ async def get_user_reps(chat_id, giving_user_id, receiving_user_id):
     while (giving_user_doc == {}):
         giving_user_doc = await find_one_doc(
             grps, { 
-                "group": chat_id, "users": { 
+                "_id": chat_id, "users": { 
                     "$elemMatch": { 
                         "user_id": giving_user_id, \
                         "rep": { 
@@ -25,7 +25,7 @@ async def get_user_reps(chat_id, giving_user_id, receiving_user_id):
         if (giving_user_doc == {}):
             await modify_db_value(grps, chat_id, "rep", 0, "$set", giving_user_id)
 
-    receiving_user_doc = await find_one_doc(grps, { "$and": [{"group": chat_id}, \
+    receiving_user_doc = await find_one_doc(grps, { "$and": [{"_id": chat_id}, \
                                {"users.user_id": receiving_user_id}] }, {"users.rep.$":1})
     # Get the last value in the list (an array), 
     # then the only element in that array (a dictionary),
@@ -68,7 +68,7 @@ async def toggle_group_rep_msg(chat_id):
 
 async def get_group_rep_msg_enabled(chat_id):
     filter = "rep_msg_enabled"
-    enabled = await find_one_doc(grps, { "group": chat_id }, { "_id": 0, filter: 1 })
+    enabled = await find_one_doc(grps, { "_id": chat_id }, { filter: 1 })
     if enabled == {}:
         await modify_db_value(grps, chat_id, filter, True, "$set")
         return True
@@ -79,7 +79,7 @@ async def get_group_rep_msg(chat_id, dec=False):
     filter = "rep_inc_msg"
     if (dec):
         filter = "rep_dec_msg"
-    return await find_one_doc(grps, { "group": chat_id }, { "_id": 0, filter: 1 })
+    return await find_one_doc(grps, { "_id": chat_id }, { filter: 1 })
 
 
 async def set_group_rep_msg(chat_id, msg, dec=False):

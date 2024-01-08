@@ -17,10 +17,8 @@ async def build_timezones_list():
 
 
 async def add_to_grps_t_data(chat_id, timezone, nisman_time, nisman_day, special_dates: list):
-    group_db_id = await get_doc_id({"group": chat_id})
     group = {
-        "_id": group_db_id,
-        "group": chat_id,
+        "_id": chat_id,
         "timezone": timezone,
         "nisman_time": nisman_time,
         "nisman_day": nisman_day,
@@ -32,7 +30,7 @@ async def add_to_grps_t_data(chat_id, timezone, nisman_time, nisman_day, special
 # TODO: Implement divide and conquer
 async def search_group_in_list(chat_id):
     for group in grps_time_data:
-        if (group.get("group") == chat_id):
+        if (group.get("_id") == chat_id):
             return group
     return None
 
@@ -40,7 +38,7 @@ async def search_group_in_list(chat_id):
 async def update_group_time_data(chat_id, timezone=None, nisman_time=None, \
                                  nisman_day=None, special_dates=None, rm_date=False):
     for group in grps_time_data:
-        if (group.get("group") == chat_id):
+        if (group.get("_id") == chat_id):
             if (timezone is not None):
                 group.update({"timezone": timezone})
             if (nisman_time is not None):

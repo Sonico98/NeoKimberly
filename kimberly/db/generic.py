@@ -11,6 +11,18 @@ error_result = {
     "upserted_count": "Error"
 }
 
+async def migrate_ids():
+    groups = await find_docs(grps, {})
+    for group in groups:
+        print(group)
+        old_doc = group["_id"]
+        group.update({"_id": group["group"]})
+        del group["group"]
+        await insert_doc(grps, group)
+        await grps.delete_one({'_id': old_doc})
+
+
+
 
 async def find_one_doc(collection, data: dict, parameter: dict = {}):
     try:
@@ -64,12 +76,12 @@ async def update_doc(collection, match_condition: dict, new_data: dict):
 
 
 async def modify_db_value(collection, chat_id, field, value, operation, user_id=None):
-    existing_group_doc = await find_one_doc(collection, {"group": chat_id})
+    existing_group_doc = await find_one_doc(collection, {"_id": chat_id})
     if (len(existing_group_doc) > 0):
         field_prefix = ""
-        matching_doc = {"group": chat_id}
+        matching_doc = {"_id": chat_id}
         if (user_id is not None):
-            matching_doc = {"group": chat_id, "users.user_id": user_id}
+            matching_doc = {"_id": chat_id, "users.user_id": user_id}
             field_prefix = "users.$."
         # Try to update an existing group's field
         result = await update_doc(collection, matching_doc, { operation: { f"{field_prefix}{field}": value } } )
@@ -78,18 +90,18 @@ async def modify_db_value(collection, chat_id, field, value, operation, user_id=
             push_operation = { "$push": { field: value } }
             if (user_id is not None):
                 push_operation = { "$push": { "users": { "user_id": user_id, f"{field}": value } } }
-            await update_doc(collection, {"group": chat_id}, push_operation)
+            await update_doc(collection, {"_id": chat_id}, push_operation)
     else:
-        insert_operation = { "group": chat_id, field: value }
+        insert_operation = { "_id": chat_id, field: value }
         if (user_id is not None):
-            insert_operation = { "group": chat_id, "users": \
+            insert_operation = { "_id": chat_id, "users": \
                                [ { "user_id": user_id, f"{field}": value } ] }
 
         await insert_doc(collection, insert_operation)
 
 
 async def get_user_ids_with_value(chat_id, value):
-    complete_users_list = await find_one_doc(grps, {"group": chat_id}, {"_id": 0, "users":1})
+    complete_users_list = await find_one_doc(grps, {"_id": chat_id}, {"users":1})
     if (complete_users_list != {}):
         users_list = complete_users_list["users"]
         complete_users_list = []

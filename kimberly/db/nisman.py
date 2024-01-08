@@ -9,7 +9,7 @@ grps = db.groups
 
 
 async def group_has_tz(chat_id):
-    res = await find_docs(grps, { "group": chat_id, \
+    res = await find_docs(grps, { "_id": chat_id, \
                                  "timezone": {"$exists":"true"}})
     if (len(res) > 0):
         return True
@@ -52,9 +52,9 @@ async def get_all_groups_times():
     groups_without_tz = await find_docs(grps, { "timezone": { "$exists": False } } )
     if (len(groups_without_tz) > 0):
         for group in groups_without_tz:
-            await set_group_nisman_defaults(group.get("group"))
+            await set_group_nisman_defaults(group.get("_id"))
 
-    res = await find_docs(grps, {}, { "group": 1, "timezone": 1, "nisman_day": 1, \
+    res = await find_docs(grps, {}, { "_id": 1, "timezone": 1, "nisman_day": 1, \
                                      "nisman_time": 1, "special_dates": 1 })
     if (len(res) > 0):
         return res
