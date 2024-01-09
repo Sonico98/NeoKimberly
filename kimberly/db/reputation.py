@@ -40,7 +40,7 @@ async def choose_rep_change_msg(chat_id, dec=False):
     rep_change_msg = ""
     group_rep_msg = await get_group_rep_msg(chat_id, dec)
     if (dec):
-        if (group_rep_msg == {}):
+        if not group_rep_msg:
             # Default decrease message
             rep_change_msg = ("{usuario_da} ({rep_usuario_da}) ha "
                               "decrementado la reputación de {usuario_recibe} en "
@@ -49,7 +49,7 @@ async def choose_rep_change_msg(chat_id, dec=False):
         else:
             rep_change_msg = group_rep_msg.get("rep_dec_msg")
     else:
-        if (group_rep_msg == {}):
+        if not group_rep_msg:
             # Default increase message
             rep_change_msg = ("{usuario_da} ({rep_usuario_da}) ha "
                               "incrementado la reputación de {usuario_recibe} en "
@@ -68,8 +68,8 @@ async def toggle_group_rep_msg(chat_id):
 
 async def get_group_rep_msg_enabled(chat_id):
     filter = "rep_msg_enabled"
-    enabled = await find_one_doc(grps, { "_id": chat_id }, { filter: 1 })
-    if enabled == {}:
+    enabled = await find_one_doc(grps, { "_id": chat_id, filter: { "$exists": True } }, { filter: 1 })
+    if not enabled:
         await modify_db_value(grps, chat_id, filter, True, "$set")
         return True
     return enabled[filter]
@@ -79,7 +79,7 @@ async def get_group_rep_msg(chat_id, dec=False):
     filter = "rep_inc_msg"
     if (dec):
         filter = "rep_dec_msg"
-    return await find_one_doc(grps, { "_id": chat_id }, { filter: 1 })
+    return await find_one_doc(grps, { "_id": chat_id, filter: { "$exists": True } }, { filter: 1 })
 
 
 async def set_group_rep_msg(chat_id, msg, dec=False):
