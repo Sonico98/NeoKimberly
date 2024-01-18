@@ -15,7 +15,7 @@ async def fix_embed(_, message):
     for website in regex_urls:
         url = website.search(message.text.lower())
         if url is not None:
-            await message.reply_text(url.group(1).replace("instagram", "ddinstagram").replace("tiktok", "vxtiktok").replace("twitter", "i.fxtwitter"))
+            await message.reply_text(url.group(1).replace("instagram", "ddinstagram").replace("tiktok", "vxtiktok").replace("twitter", "vxtwitter"))
 
 
 # TODO)) implement callback button to force download the embed (video) with yt-dlp
