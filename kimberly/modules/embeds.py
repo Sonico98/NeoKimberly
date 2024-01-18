@@ -13,7 +13,7 @@ regex_urls = [c(instagram), c(tiktok), c(twitter)]
 @kimberly.on_edited_message(filters.regex(f"{instagram}|{tiktok}|{twitter}"))
 async def fix_embed(_, message):
     for website in regex_urls:
-        url = website.search(message.text.lower())
+        url = website.search(message.text)
         if url is not None:
             await message.reply_text(url.group(1).replace("instagram", "ddinstagram").replace("tiktok", "vxtiktok").replace("twitter", "vxtwitter"))
 
