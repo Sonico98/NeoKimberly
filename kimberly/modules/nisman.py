@@ -9,7 +9,7 @@ from utils.time_parser import get_today, date_format_is_correct, time_format_is_
 from utils.users import is_admin
 
 grps_time_data = []
-
+checking_nsm = []
 
 async def build_timezones_list():
     global grps_time_data
@@ -141,16 +141,15 @@ async def check_nisman(_, message):
     msg_datetime = message.date
     chat_id = message.chat.id
     user = message.from_user
+    # If multiple messages get sent by a user at the same time (e.g: they were forwarded)
+    # increase the nisman count only once
+    if [chat_id, user] not in checking_nsm:
+        checking_nsm.append([chat_id, user])
+    else:
+        return
     group = await search_group_in_list(chat_id)
     # Because the group will always get added to the list as soon as the bot gets added to it
     assert group is not None
-    # Don't increase the nisman count for each message in an album
-    try:
-        grouped_messages = await kimberly.get_media_group(chat_id, message.id)
-        if (grouped_messages[0].id != message.id):
-            return
-    except:
-        pass
 
     grp_timezone = pytz.timezone(group.get("timezone"))
     grp_n_time = group.get("nisman_time")
@@ -198,6 +197,7 @@ async def check_nisman(_, message):
         day = await get_today(default_timezone) + timedelta(days=1)
         await update_group_time_data(chat_id, nisman_day=day)
         await set_group_nisman_day(chat_id, day)
+    checking_nsm.remove([chat_id, user])
 
 
 @kimberly.on_message(filters.group & filters.command("nisman"))
