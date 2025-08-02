@@ -9,3 +9,4 @@ __pycache__/
 
 # Sensitive data
 /kimberly/config/login.py
+/kimberly/config/cookies/ig.txt

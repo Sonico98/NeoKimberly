@@ -1,7 +1,13 @@
-uvloop; platform_system == "Linux"
-git+https://github.com/KurimuzonAkuma/pyrogram/
-tgcrypto
-motor
-pykeyboard
-natsort
-pytz
+dnspython==2.7.0
+Kurigram @ git+https://github.com/KurimuzonAkuma/pyrogram/@2bdee7a057cd8603e0f437972134ef2314637b56
+motor==3.5.0
+natsort==8.4.0
+pyaes==1.6.1
+pykeyboard==0.1.5
+pymongo==4.8.0
+Pyrogram==2.0.106
+PySocks==1.7.1
+pytz==2025.1
+TgCrypto==1.2.5
+uvloop==0.21.0
+yt-dlp==2025.7.21
