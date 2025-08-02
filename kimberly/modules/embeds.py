@@ -36,7 +36,7 @@ async def fix_embed(_, message):
                         vid_msg = await message.reply_text("Downloading video...")
                         error_code = ydl.download(url)
                         await vid_msg.edit("Uploading...")
-                        await message.reply_document(f"/tmp/{randname}.mp4", quote=True, disable_notification=True)
+                        await message.reply_video(f"/tmp/{randname}.mp4", quote=True, disable_notification=True, supports_streaming=True)
                         await vid_msg.delete()
                         os.remove(f"/tmp/{randname}.mp4")
 
