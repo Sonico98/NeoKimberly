@@ -30,17 +30,20 @@ async def get_server_info():
 
 async def start_pyrogram():
     print("Starting the bot...")
-    try:
-        await kimberly.start()
-        print("Running!")
-        await idle()
-        print("\nGoodbye!")
-        await kimberly.stop()
-    except:
-        print("\nError starting the bot. Please make sure you've " +
-              "filled out all the information required in the " +
-              "configuration file and that it's correct")
-        sys.exit(2)
+    while True:
+        try:
+            await kimberly.start()
+            print("Running!")
+            await idle()
+        except:
+            print("\nError starting the bot. Please make sure you've " +
+                  "filled out all the information required in the " +
+                  "configuration file and that it's correct")
+            await asyncio.sleep(5)
+        finally:
+            print("\nGoodbye!")
+            await kimberly.stop()
+            sys.exit(2)
 
 
 async def main():
