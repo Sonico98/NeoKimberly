@@ -1,0 +1,14 @@
+[Unit]
+Description=Feature-full Telegram bot with triggers capability
+After=docker.service
+StartLimitIntervalSec=500
+StartLimitBurst=5
+
+[Service]
+WorkingDirectory=/home/sonico/Bots/NeoKimberly_prod
+ExecStart=/home/sonico/.virtualenvs/rangerbot/bin/python /home/sonico/Bots/NeoKimberly_prod/kimberly
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=default.target
